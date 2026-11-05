@@ -137,8 +137,9 @@ def build_track(tp: TrackParams) -> dict:
 
     # add 12 Gaussian corners at realistic positions
     corner_positions = np.linspace(tp.L * 0.05, tp.L * 0.95, 12)
-    corner_widths    = np.random.default_rng(42).uniform(60, 140, 12)
-    corner_amps      = np.random.default_rng(42).uniform(0.012, 0.030, 12)
+    rng              = np.random.default_rng(42)
+    corner_widths    = rng.uniform(60, 140, 12)
+    corner_amps      = rng.uniform(0.012, 0.030, 12)
     for pos, w, amp in zip(corner_positions, corner_widths, corner_amps):
         kappa += amp * np.exp(-0.5 * ((s - pos) / w) ** 2)
 
@@ -150,7 +151,8 @@ def build_track(tp: TrackParams) -> dict:
     x = np.cumsum(np.cos(theta) * ds)
     y = np.cumsum(np.sin(theta) * ds)
 
-    return {"s": s, "ds": ds, "kappa": kappa, "grade": grade, "x": x, "y": y}
+    return {"s": s, "ds": ds, "kappa": kappa, "grade": grade, "x": x, "y": y,
+            "corner_widths": corner_widths, "corner_amps": corner_amps}
 
 
 # ── Aero helpers ──────────────────────────────────────────────────────────────

@@ -1,7 +1,7 @@
 import numpy as np
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
-from simulation.physics_model import CarParams, TrackParams, run_lap, grip_window
+from simulation.physics_model import CarParams, TrackParams, run_lap, grip_window, build_track, G
 
 def test_grip_window_peak():
     cp = CarParams()
@@ -64,6 +64,12 @@ def test_energy_conservation():
     assert free.any() and np.allclose(np.diff(res['SOC'])[free], expected[free], rtol=0, atol=1e-12),         'SOC change must equal battery energy flow'
     print('PASS: SOC balance holds at %d nodes' % free.sum())
 
+def test_corner_widths_and_amplitudes_independent():
+    track = build_track(TrackParams())
+    r = np.corrcoef(track['corner_widths'], track['corner_amps'])[0, 1]
+    assert abs(r) < 0.99, 'Corner widths and amplitudes must be independent draws'
+    print('PASS: corner width/amplitude correlation = %.3f' % r)
+
 def run_all():
     tests = [
         test_grip_window_peak,
@@ -75,6 +81,7 @@ def run_all():
         test_wear_monotonic,
         test_lap_time_physical,
         test_energy_conservation,
+        test_corner_widths_and_amplitudes_independent,
     ]
     passed = 0; failed = 0
     for t in tests:

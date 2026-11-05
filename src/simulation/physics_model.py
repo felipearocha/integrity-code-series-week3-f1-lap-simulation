@@ -22,8 +22,8 @@ Aerodynamic forces:
   F_drag = 0.5 * rho * Cd(m) * A * v^2
   F_down = 0.5 * rho * Cl(m) * A * v^2
 
-Traction ceiling:
-  F_trac_max = mu_eff * F_down * 4
+Traction ceiling (normal load = weight + downforce):
+  F_trac_max = mu_eff * (m_car * g + F_down)
 
 Master equation of motion:
   m_car * dv/dt = F_drive - F_drag - F_roll - F_grade - F_brake
@@ -258,7 +258,7 @@ def run_lap(cp: CarParams, tp: TrackParams, verbose: bool = False) -> dict:
 
         # 3. effective friction and traction ceiling
         mu_eff  = mu_effective(T, wear, cp)
-        F_tmax  = mu_eff * F_down * 4.0
+        F_tmax  = mu_eff * (cp.m_car * G + F_down)
 
         # 4. slip angle proxy
         beta    = float(np.clip(

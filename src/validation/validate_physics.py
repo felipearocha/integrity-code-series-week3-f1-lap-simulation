@@ -70,6 +70,15 @@ def test_corner_widths_and_amplitudes_independent():
     assert abs(r) < 0.99, 'Corner widths and amplitudes must be independent draws'
     print('PASS: corner width/amplitude correlation = %.3f' % r)
 
+def test_traction_ceiling_uses_total_normal_load():
+    cp = CarParams(); tp = TrackParams()
+    res = run_lap(cp, tp)
+    normal_load = res['F_trac_max'] / res['mu_eff']
+    # Coulomb limit: N = m g + F_down, with m g = 768 * 9.81 = 7534.08 N
+    assert np.allclose(normal_load - res['F_down'], 7534.08, rtol=1e-9), \
+        'Normal load must be weight plus downforce'
+    print('PASS: F_trac_max = mu_eff * (7534.08 N + F_down)')
+
 def run_all():
     tests = [
         test_grip_window_peak,
@@ -82,6 +91,7 @@ def run_all():
         test_lap_time_physical,
         test_energy_conservation,
         test_corner_widths_and_amplitudes_independent,
+        test_traction_ceiling_uses_total_normal_load,
     ]
     passed = 0; failed = 0
     for t in tests:

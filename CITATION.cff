@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+title: "Integrity Code Series - Week 3 - F1 Lap Simulation"
+message: "If you use this software, please cite it using the metadata below."
+type: software
+authors:
+  - family-names: Rocha
+    given-names: Felipe
+    affiliation: "Independent Researcher"
+repository-code: "https://github.com/felipearocha/integrity-code-series-week3-f1-lap-simulation"
+url: "https://github.com/felipearocha/integrity-code-series-week3-f1-lap-simulation"
+abstract: >
+  Physics-informed F1 lap simulation, space-marched along arc length: velocity, ERS state of charge, fuel mass, tyre temperature and tyre wear, with a Gaussian thermal grip window, a first-order spatial aero-mode filter and ERS deploy/regen gate logic. Classical numerics, no ML, no proprietary data. The package is the Week 3 entry in the Integrity Code Series of physics-first integrity simulators by Felipe Rocha.
+keywords:
+  - lap simulation
+  - vehicle dynamics
+  - Formula 1
+  - tyre thermal model
+  - energy recovery system
+  - numerical simulation
+license: MIT
+version: "0.0.1"
+date-released: "2026-03-03"

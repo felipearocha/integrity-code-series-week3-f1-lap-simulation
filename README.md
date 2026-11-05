@@ -6,7 +6,6 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![Tests: 9 passing](https://img.shields.io/badge/tests-9%20passing-brightgreen.svg)](src/validation/validate_physics.py)
-[![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 
 Physics-informed F1 lap simulation using six coupled ODEs
 integrated along arc length (space-marched scheme).
@@ -61,6 +60,7 @@ integrity-code-series-week3-f1-lap-simulation/
 ├── pytest.ini                    # Test discovery config (collects the 9 validation tests)
 ├── requirements.txt
 ├── CHANGELOG.md
+├── CITATION.cff
 ├── LICENSE
 └── README.md
 ```
@@ -87,7 +87,7 @@ python src/validation/validate_physics.py
 # Simulation only
 python src/simulation/physics_model.py
 
-# Visualizations only (requires simulation to have run)
+# Visualizations only (runs the simulation itself)
 python src/visualization/plot_lap.py
 
 # GIF only

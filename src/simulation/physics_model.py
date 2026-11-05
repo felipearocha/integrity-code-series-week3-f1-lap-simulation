@@ -3,15 +3,18 @@ physics_model.py
 ================
 ICS2 Week 3  |  F1 Lap Simulation  |  INTEGRITY CODE SERIES
 
-Six-state space-marched coupled ODE system.
+Space-marched system of six first-order state equations.
 
 States integrated at each spatial node ds:
+  m         aero mode                      [0,1]
   v         longitudinal velocity          [m/s]
-  beta      lateral slip angle proxy       [rad]
   SOC       battery state of charge        [0,1]
-  fuel      fuel mass remaining            [kg]
+  fuel      fuel mass remaining            [kg], not fed back into m_car
   T_tire    tyre bulk temperature          [C]
   wear      tyre wear state                [0,1]
+
+Computed algebraically at each node:
+  beta      lateral slip angle proxy       [rad]
 
 Governing equations
 -------------------
@@ -34,7 +37,7 @@ Tyre temperature ODE:
 
 Gaussian grip window:
   f_T = exp( -(T - T_opt)^2 / (2 * sigma^2) )
-  mu_eff = mu0 * f_T * (1 - k_w * wear)
+  mu_eff = clip(mu0 * f_T * (1 - 1e4 * k_w * wear), mu_eff_min, mu_eff_max)
 
 Wear ODE:
   dw/dt = k_w * E_slip * [0.6 + 0.8*(1 - f_T)]
@@ -91,7 +94,7 @@ class CarParams:
     T_opt:         float = 95.0    # peak grip temperature      [C]
     T_track:       float = 38.0    # track surface temp         [C]
     sigma_T:       float = 20.0    # thermal window half-width  [C]
-    k_heat:        float = 1.2e-5  # heating coefficient
+    k_heat:        float = 1.2e-5  # heating coefficient [ASSUMED], see README Limitations
     k_cool:        float = 0.10    # cooling coefficient        [1/s]
     mu0:           float = 1.75    # baseline friction          [-]
     k_w:           float = 2.0e-6  # wear rate coefficient

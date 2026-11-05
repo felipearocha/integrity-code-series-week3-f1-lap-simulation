@@ -1,7 +1,8 @@
 import numpy as np
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
-from simulation.physics_model import CarParams, TrackParams, run_lap, grip_window, build_track, RHO_AIR
+from simulation.physics_model import (CarParams, TrackParams, run_lap, grip_window,
+                                      mu_effective, build_track, RHO_AIR)
 
 def test_grip_window_peak():
     cp = CarParams()
@@ -92,6 +93,11 @@ def test_track_is_closed():
     assert gap < 1e-6, 'Track must end where it starts (x = y = 0)'
     print('PASS: net turn = 2 pi, end gap = %.1e m' % gap)
 
+def test_mu_effective_matches_published_equation():
+    # mu0 (1 - 1e4 k_w w) at T_opt: 1.75 * (1 - 1e4 * 2e-6 * 0.5) = 1.7325
+    assert abs(mu_effective(95.0, 0.5, CarParams()) - 1.7325) < 1e-12,         'mu_eff must match the README equation'
+    print('PASS: mu_eff matches the published equation')
+
 def run_all():
     tests = [
         test_grip_window_peak,
@@ -106,6 +112,7 @@ def run_all():
         test_corner_widths_and_amplitudes_independent,
         test_traction_ceiling_uses_total_normal_load,
         test_track_is_closed,
+        test_mu_effective_matches_published_equation,
     ]
     passed = 0; failed = 0
     for t in tests:

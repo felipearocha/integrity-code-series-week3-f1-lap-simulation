@@ -58,10 +58,11 @@ def test_lap_time_physical():
 def test_energy_conservation():
     cp = CarParams(); tp = TrackParams()
     res = run_lap(cp, tp)
-    dSOC = res['SOC'][0] - res['SOC'][-1]
-    E_used = dSOC * cp.E_bat / 1e6
-    assert E_used >= 0.0, 'Net energy consumed must be non-negative'
-    print('PASS: net battery energy consumed = %.3f MJ' % E_used)
+    # dSOC/dt = -P_bat / E_bat at every node the SOC clip does not touch
+    expected = -(res['P_MGUK_kW'][:-1] * 1e3 / cp.E_bat) * res['dt'][:-1]
+    free = (res['SOC'][1:] > 0.20) & (res['SOC'][1:] < 0.95)
+    assert free.any() and np.allclose(np.diff(res['SOC'])[free], expected[free], rtol=0, atol=1e-12),         'SOC change must equal battery energy flow'
+    print('PASS: SOC balance holds at %d nodes' % free.sum())
 
 def run_all():
     tests = [

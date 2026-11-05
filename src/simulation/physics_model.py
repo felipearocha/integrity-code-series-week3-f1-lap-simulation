@@ -3,15 +3,18 @@ physics_model.py
 ================
 ICS2 Week 3  |  F1 Lap Simulation  |  INTEGRITY CODE SERIES
 
-Six-state space-marched coupled ODE system.
+Space-marched system of six first-order state equations.
 
 States integrated at each spatial node ds:
+  m         aero mode                      [0,1]
   v         longitudinal velocity          [m/s]
-  beta      lateral slip angle proxy       [rad]
   SOC       battery state of charge        [0,1]
-  fuel      fuel mass remaining            [kg]
+  fuel      fuel mass remaining            [kg], not fed back into m_car
   T_tire    tyre bulk temperature          [C]
   wear      tyre wear state                [0,1]
+
+Computed algebraically at each node:
+  beta      lateral slip angle proxy       [rad]
 
 Governing equations
 -------------------
@@ -22,8 +25,8 @@ Aerodynamic forces:
   F_drag = 0.5 * rho * Cd(m) * A * v^2
   F_down = 0.5 * rho * Cl(m) * A * v^2
 
-Traction ceiling:
-  F_trac_max = mu_eff * F_down * 4
+Traction ceiling (normal load = weight + downforce):
+  F_trac_max = mu_eff * (m_car * g + F_down)
 
 Master equation of motion:
   m_car * dv/dt = F_drive - F_drag - F_roll - F_grade - F_brake
@@ -34,7 +37,7 @@ Tyre temperature ODE:
 
 Gaussian grip window:
   f_T = exp( -(T - T_opt)^2 / (2 * sigma^2) )
-  mu_eff = mu0 * f_T * (1 - k_w * wear)
+  mu_eff = clip(mu0 * f_T * (1 - 1e4 * k_w * wear), mu_eff_min, mu_eff_max)
 
 Wear ODE:
   dw/dt = k_w * E_slip * [0.6 + 0.8*(1 - f_T)]
@@ -57,6 +60,7 @@ Assumptions
 
 import numpy as np
 from dataclasses import dataclass, field
+from scipy.optimize import fsolve
 from typing import Tuple
 
 
@@ -90,7 +94,7 @@ class CarParams:
     T_opt:         float = 95.0    # peak grip temperature      [C]
     T_track:       float = 38.0    # track surface temp         [C]
     sigma_T:       float = 20.0    # thermal window half-width  [C]
-    k_heat:        float = 1.2e-5  # heating coefficient
+    k_heat:        float = 1.2e-5  # heating coefficient [ASSUMED], see README Limitations
     k_cool:        float = 0.10    # cooling coefficient        [1/s]
     mu0:           float = 1.75    # baseline friction          [-]
     k_w:           float = 2.0e-6  # wear rate coefficient
@@ -120,7 +124,8 @@ def build_track(tp: TrackParams) -> dict:
     """
     Generate synthetic closed circuit curvature and grade profiles.
 
-    Curvature profile: sum of sinusoidal harmonics + 12 Gaussian corners.
+    Curvature profile: sum of sinusoidal harmonics + 12 Gaussian corners,
+    shifted and corrected so the circuit turns once and closes on itself.
     Grade profile:     single sine wave.
 
     Returns dict with keys: s, kappa, grade, x, y
@@ -137,10 +142,22 @@ def build_track(tp: TrackParams) -> dict:
 
     # add 12 Gaussian corners at realistic positions
     corner_positions = np.linspace(tp.L * 0.05, tp.L * 0.95, 12)
-    corner_widths    = np.random.default_rng(42).uniform(60, 140, 12)
-    corner_amps      = np.random.default_rng(42).uniform(0.012, 0.030, 12)
+    rng              = np.random.default_rng(42)
+    corner_widths    = rng.uniform(60, 140, 12)
+    corner_amps      = rng.uniform(0.012, 0.030, 12)
     for pos, w, amp in zip(corner_positions, corner_widths, corner_amps):
         kappa += amp * np.exp(-0.5 * ((s - pos) / w) ** 2)
+
+    # Close the circuit: net turning of exactly one revolution, then a first
+    # harmonic (no net turning) that brings the end point back to the start
+    kappa += 2 * np.pi / tp.L - kappa.mean()
+    first = np.array([np.cos(2 * np.pi * s / tp.L), np.sin(2 * np.pi * s / tp.L)])
+
+    def end_gap(ab):
+        theta = np.cumsum((kappa + ab @ first) * ds)
+        return [np.sum(np.cos(theta)) * ds, np.sum(np.sin(theta)) * ds]
+
+    kappa += fsolve(end_gap, [0.0, 0.0], xtol=1e-12) @ first
 
     # grade profile
     grade = tp.grade_amp * np.sin(2 * np.pi * s / tp.L)
@@ -150,7 +167,8 @@ def build_track(tp: TrackParams) -> dict:
     x = np.cumsum(np.cos(theta) * ds)
     y = np.cumsum(np.sin(theta) * ds)
 
-    return {"s": s, "ds": ds, "kappa": kappa, "grade": grade, "x": x, "y": y}
+    return {"s": s, "ds": ds, "kappa": kappa, "grade": grade, "x": x, "y": y,
+            "corner_widths": corner_widths, "corner_amps": corner_amps}
 
 
 # ── Aero helpers ──────────────────────────────────────────────────────────────
@@ -256,7 +274,7 @@ def run_lap(cp: CarParams, tp: TrackParams, verbose: bool = False) -> dict:
 
         # 3. effective friction and traction ceiling
         mu_eff  = mu_effective(T, wear, cp)
-        F_tmax  = mu_eff * F_down * 4.0
+        F_tmax  = mu_eff * (cp.m_car * G + F_down)
 
         # 4. slip angle proxy
         beta    = float(np.clip(

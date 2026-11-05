@@ -109,14 +109,14 @@
 
 <header>
   <h1>Integrity Code Series — Week 3</h1>
-  <p class="subtitle">F1 Lap Simulation — Six Coupled ODEs Space-Marched Along Arc Length — Governing Equations Reference</p>
+  <p class="subtitle">F1 Lap Simulation — ODEs Space-Marched Along Arc Length — Governing Equations Reference</p>
   <p class="subtitle"><strong>Felipe Rocha</strong></p>
 </header>
 
 <div class="note">
   <strong>Scope of sourcing.</strong> This package is a self-contained classical-dynamics lap
   model. The equations below are standard textbook mechanics (Newton's second law, the
-  aerodynamic force law, a first-order lag filter, and a Gaussian window) combined with
+  aerodynamic force law, a first-order lag filter) combined with a Gaussian grip window and
   engineering coefficients chosen for the model. No external standard or paper is claimed as a
   source; every relation and constant reproduced here is transcribed verbatim from this
   repository's own <span class="code-ref">README.md</span> and
@@ -180,10 +180,10 @@ $$
 <h3>2.1 Friction-limited traction ceiling</h3>
 <div class="eq-card">
 $$
-F_{\text{trac,max}} \;=\; \mu_{\text{eff}}\,F_{\text{down}}\cdot 4
+F_{\text{trac,max}} \;=\; \mu_{\text{eff}}\,\bigl(m_{\text{car}}\,g + F_{\text{down}}\bigr)
 $$
-the factor 4 aggregates the four tyres.
-<p class="src">[ASSUMED] Coulomb friction limit applied to the aggregate downforce over four contact patches.</p>
+the normal load is the car's weight plus total downforce.
+<p class="src">[SOURCE] Coulomb friction limit on the total normal load.</p>
 <p>Code: <span class="code-ref">src/simulation/physics_model.py → run_lap (traction ceiling)</span>.</p>
 </div>
 
@@ -235,9 +235,9 @@ with $b$ the brake proxy and $T_{\text{track}}$ the track surface temperature.
 $$
 f_T \;=\; \exp\!\left(-\frac{(T - T_{\text{opt}})^{2}}{2\,\sigma^{2}}\right),
 \qquad
-\mu_{\text{eff}} \;=\; \mu_0\,f_T\,(1 - k_w\,\text{wear})
+\mu_{\text{eff}} \;=\; \operatorname{clip}\bigl(\mu_0\,f_T\,(1 - 10^{4}\,k_w\,\text{wear}),\; 0.40,\; 2.20\bigr)
 $$
-grip peaks at $T=T_{\text{opt}}$ ($f_T=1$) and falls off over the thermal half-width $\sigma$.
+grip peaks at $T=T_{\text{opt}}$ ($f_T=1$) and falls off over the thermal half-width $\sigma$. At the default parameters the tyre stays near 40 °C, so $\mu_{\text{eff}}$ sits at the 0.40 clip (see README, Limitations).
 <p class="src">[ASSUMED] Gaussian grip-temperature window with a linear wear-degradation factor; $T_{\text{opt}}$, $\sigma$, $\mu_0$, $k_w$ are model parameters.</p>
 <p>Code: <span class="code-ref">src/simulation/physics_model.py → grip_window, mu_effective</span>.</p>
 </div>
@@ -275,7 +275,7 @@ $$
 \qquad
 t_{\text{lap}} \;=\; \sum_i \Delta t_i
 $$
-the six state variables ($v,\ \beta,\ \text{SOC},\ \text{fuel},\ T_{\text{tire}},\ \text{wear}$) are advanced node-by-node along arc length $s$; the local time step follows from the along-track speed, and $\varepsilon$ guards against division by zero.
+the six states ($m,\ v,\ \text{SOC},\ \text{fuel},\ T_{\text{tire}},\ \text{wear}$) are advanced node-by-node along arc length $s$; the local time step follows from the along-track speed, and $\varepsilon$ guards against division by zero.
 <p class="src">[SOURCE] Explicit space-marched (forward-Euler in $s$) integration; step $\Delta s = L/N$.</p>
 <p>Code: <span class="code-ref">src/simulation/physics_model.py → run_lap (integration loop)</span>.</p>
 </div>
@@ -285,7 +285,7 @@ the six state variables ($v,\ \beta,\ \text{SOC},\ \text{fuel},\ T_{\text{tire}}
 </div>
 
 <footer>
-  Integrity Code Series — Week 3 · Felipe Rocha · 9 / 9 physics-consistency tests passing<br>
+  Integrity Code Series — Week 3 · Felipe Rocha · 13 / 13 physics-consistency tests passing<br>
   Browse the generated panels in <code>assets/outputs/</code> for visual results.
 </footer>
 

@@ -1,7 +1,7 @@
 import numpy as np
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
-from simulation.physics_model import CarParams, TrackParams, run_lap, grip_window, build_track, G
+from simulation.physics_model import CarParams, TrackParams, run_lap, grip_window, build_track, RHO_AIR
 
 def test_grip_window_peak():
     cp = CarParams()
@@ -52,7 +52,11 @@ def test_lap_time_physical():
     cp = CarParams(); tp = TrackParams()
     res = run_lap(cp, tp)
     lt = res['lap_time']
-    assert 55.0 < lt < 150.0, 'Lap time %.2f s outside physical range [55, 150] s' % lt
+    # Floor: the whole lap at the power-limited top speed, P = 0.5 rho Cd A v^3
+    P_max = cp.eta_dt * (cp.P_ICE_max + 0.55 * cp.P_MGUK_max)
+    v_top = (P_max / (0.5 * RHO_AIR * cp.Cd_X * cp.A_ref)) ** (1.0 / 3.0)
+    floor = tp.L / v_top
+    assert floor < lt < 150.0, 'Lap time %.2f s outside physical range [%.1f, 150] s' % (lt, floor)
     print('PASS: lap time physical: %.2f s' % lt)
 
 def test_energy_conservation():
@@ -79,6 +83,15 @@ def test_traction_ceiling_uses_total_normal_load():
         'Normal load must be weight plus downforce'
     print('PASS: F_trac_max = mu_eff * (7534.08 N + F_down)')
 
+def test_track_is_closed():
+    tp = TrackParams()
+    track = build_track(tp)
+    net_turn = np.sum(track['kappa']) * track['ds']
+    assert abs(net_turn - 2 * np.pi) < 1e-9, 'A closed circuit turns exactly once'
+    gap = np.hypot(track['x'][-1], track['y'][-1])
+    assert gap < 1e-6, 'Track must end where it starts (x = y = 0)'
+    print('PASS: net turn = 2 pi, end gap = %.1e m' % gap)
+
 def run_all():
     tests = [
         test_grip_window_peak,
@@ -92,6 +105,7 @@ def run_all():
         test_energy_conservation,
         test_corner_widths_and_amplitudes_independent,
         test_traction_ceiling_uses_total_normal_load,
+        test_track_is_closed,
     ]
     passed = 0; failed = 0
     for t in tests:

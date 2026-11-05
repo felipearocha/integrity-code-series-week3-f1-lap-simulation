@@ -57,6 +57,7 @@ Assumptions
 
 import numpy as np
 from dataclasses import dataclass, field
+from scipy.optimize import fsolve
 from typing import Tuple
 
 
@@ -120,7 +121,8 @@ def build_track(tp: TrackParams) -> dict:
     """
     Generate synthetic closed circuit curvature and grade profiles.
 
-    Curvature profile: sum of sinusoidal harmonics + 12 Gaussian corners.
+    Curvature profile: sum of sinusoidal harmonics + 12 Gaussian corners,
+    shifted and corrected so the circuit turns once and closes on itself.
     Grade profile:     single sine wave.
 
     Returns dict with keys: s, kappa, grade, x, y
@@ -142,6 +144,17 @@ def build_track(tp: TrackParams) -> dict:
     corner_amps      = rng.uniform(0.012, 0.030, 12)
     for pos, w, amp in zip(corner_positions, corner_widths, corner_amps):
         kappa += amp * np.exp(-0.5 * ((s - pos) / w) ** 2)
+
+    # Close the circuit: net turning of exactly one revolution, then a first
+    # harmonic (no net turning) that brings the end point back to the start
+    kappa += 2 * np.pi / tp.L - kappa.mean()
+    first = np.array([np.cos(2 * np.pi * s / tp.L), np.sin(2 * np.pi * s / tp.L)])
+
+    def end_gap(ab):
+        theta = np.cumsum((kappa + ab @ first) * ds)
+        return [np.sum(np.cos(theta)) * ds, np.sum(np.sin(theta)) * ds]
+
+    kappa += fsolve(end_gap, [0.0, 0.0], xtol=1e-12) @ first
 
     # grade profile
     grade = tp.grade_amp * np.sin(2 * np.pi * s / tp.L)

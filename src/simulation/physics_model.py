@@ -1,7 +1,7 @@
 """
 physics_model.py
 ================
-ICS2 Week 3  |  F1 Lap Simulation  |  INTEGRITY CODE SERIES
+Week 3  |  F1 Lap Simulation  |  INTEGRITY CODE SERIES
 
 Space-marched system of six first-order state equations.
 

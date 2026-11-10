@@ -1,7 +1,7 @@
 """
 plot_lap.py
 ===========
-ICS2 Week 3  |  F1 Lap Simulation  |  INTEGRITY CODE SERIES
+Week 3  |  F1 Lap Simulation  |  INTEGRITY CODE SERIES
 
 Generates all required visualizations from a completed lap simulation.
 
@@ -53,11 +53,12 @@ def hero_telemetry(res: dict, path: str):
     """6-panel telemetry dashboard."""
     s = res["s"] / 1000   # km
 
-    fig, axes = plt.subplots(6, 1, figsize=(14, 18), dpi=100,
+    cp = CarParams()
+    fig, axes = plt.subplots(6, 1, figsize=(12, 15), dpi=100,
                               sharex=True)
     fig.patch.set_facecolor(BG)
-    fig.suptitle("F1 Lap Simulation  |  ICS2 Week 3  |  INTEGRITY CODE SERIES",
-                 color=WHT, fontsize=14, fontweight="bold", y=0.995)
+    fig.suptitle("F1 Lap Simulation  |  Week 3  |  INTEGRITY CODE SERIES",
+                 color=WHT, fontsize=15, fontweight="bold", y=0.995)
 
     panels = [
         (axes[0], res["v_kmh"],     "Speed [km/h]",         BLU),
@@ -71,21 +72,44 @@ def hero_telemetry(res: dict, path: str):
     for ax, data, label, color in panels:
         ax.plot(s, data, color=color, lw=1.2)
         ax.fill_between(s, data, alpha=0.15, color=color)
-        ax.set_ylabel(label, fontsize=9)
+        ax.set_ylabel(label, fontsize=11)
+        ax.tick_params(labelsize=10)
         ax.grid(True)
         ax.set_facecolor(P1)
 
     # overlay thermal window band on tyre temp panel
-    axes[1].axhline(95, color=RED, lw=0.8, ls="--", alpha=0.6, label="T_opt 95°C")
-    axes[1].axhline(75, color=GRY, lw=0.6, ls=":", alpha=0.5)
-    axes[1].axhline(115, color=GRY, lw=0.6, ls=":", alpha=0.5)
-    axes[1].legend(fontsize=8, loc="upper right")
+    axes[1].axhline(cp.T_opt, color=RED, lw=0.8, ls="--", alpha=0.6,
+                    label=f"T_opt {cp.T_opt:.0f}°C")
+    axes[1].axhline(cp.T_opt - cp.sigma_T, color=GRY, lw=0.6, ls=":", alpha=0.7,
+                    label=f"T_opt ± σ ({cp.sigma_T:.0f}°C)")
+    axes[1].axhline(cp.T_opt + cp.sigma_T, color=GRY, lw=0.6, ls=":", alpha=0.7)
+    T = res["T_tire"]
+    # 40.0 is the lower bound of the np.clip on T in run_lap
+    if np.isclose(T.min(), 40.0):
+        axes[1].text(s[-1], 40.0 + 4, "flat at 40°C: lower clip on T "
+                     f"(cooling pulls toward T_track = {cp.T_track:.0f}°C)",
+                     ha="right", va="bottom", fontsize=10, color=YEL)
+    axes[1].legend(fontsize=9, loc="upper right")
+
+    # flat friction: every node at the lower clip, say so on the panel
+    mu = res["mu_eff"]
+    if np.allclose(mu, cp.mu_eff_min):
+        axes[2].set_ylim(0, 2 * cp.mu_eff_min)
+        axes[2].text(s[-1], cp.mu_eff_min * 1.12,
+                     f"μ_eff = {cp.mu_eff_min:.2f} at every node: lower clip "
+                     "(μ0·f_T is below it at these tyre temperatures)",
+                     ha="right", va="bottom", fontsize=10, color=GRN)
 
     # mark SOC gate
     axes[3].axhline(35, color=RED, lw=0.8, ls="--", alpha=0.6, label="Deploy gate 35%")
-    axes[3].legend(fontsize=8, loc="upper right")
+    axes[3].legend(fontsize=9, loc="upper right")
 
-    axes[5].set_xlabel("Arc length [km]", fontsize=9)
+    # regen ceiling that produces the flat negative segments
+    axes[4].axhline(-cp.P_regen_max / 1e3, color=GRY, lw=0.6, ls=":", alpha=0.7,
+                    label=f"regen ceiling −{cp.P_regen_max/1e3:.0f} kW")
+    axes[4].legend(fontsize=9, loc="lower left")
+
+    axes[5].set_xlabel("Arc length [km]", fontsize=11)
     plt.tight_layout(rect=[0, 0, 1, 0.995])
     plt.savefig(path, dpi=100, bbox_inches="tight", facecolor=BG)
     plt.close(fig)
@@ -161,7 +185,7 @@ def sensitivity_lap_time(base_cp: CarParams, base_tp: TrackParams, path: str):
     ax2.set_title("Sensitivity: Lap Time vs T_opt", color=WHT)
     ax2.legend(fontsize=9)
 
-    fig.suptitle("Lap Time Sensitivity Analysis  |  ICS2 Week 3",
+    fig.suptitle("Lap Time Sensitivity Analysis  |  Week 3",
                  color=WHT, fontsize=12, fontweight="bold")
     plt.tight_layout()
     plt.savefig(path, dpi=100, bbox_inches="tight", facecolor=BG)
@@ -228,7 +252,7 @@ def track_speed_heatmap(res: dict, path: str):
     cb.set_label("Speed [km/h]", color=WHT)
     cb.ax.yaxis.set_tick_params(color=WHT)
     plt.setp(cb.ax.yaxis.get_ticklabels(), color=WHT)
-    ax.set_title("Track Speed Heatmap  |  ICS2 Week 3",
+    ax.set_title("Track Speed Heatmap  |  Week 3",
                  color=WHT, fontsize=12, fontweight="bold", pad=12)
     plt.tight_layout()
     plt.savefig(path, dpi=100, bbox_inches="tight", facecolor=BG)

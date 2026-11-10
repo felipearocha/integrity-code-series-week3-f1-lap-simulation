@@ -2,7 +2,7 @@
 """
 run_all.py
 ==========
-ICS2 Week 3  |  F1 Lap Simulation  |  INTEGRITY CODE SERIES
+Week 3  |  F1 Lap Simulation  |  INTEGRITY CODE SERIES
 
 Master execution script. Runs in this order:
   1. Physics validation
@@ -17,7 +17,7 @@ import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
 print('=' * 60)
-print('INTEGRITY CODE SERIES  |  ICS2 Week 3  |  F1 Lap Simulation')
+print('INTEGRITY CODE SERIES  |  Week 3  |  F1 Lap Simulation')
 print('=' * 60)
 
 # Step 1: validation

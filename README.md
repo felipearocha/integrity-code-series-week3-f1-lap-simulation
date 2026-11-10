@@ -5,10 +5,14 @@
 [![CI](https://github.com/felipearocha/integrity-code-series-week3-f1-lap-simulation/actions/workflows/ci.yml/badge.svg)](https://github.com/felipearocha/integrity-code-series-week3-f1-lap-simulation/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
-[![Tests: 9 passing](https://img.shields.io/badge/tests-13%20passing-brightgreen.svg)](src/validation/validate_physics.py)
+[![Tests: 13 passing](https://img.shields.io/badge/tests-13%20passing-brightgreen.svg)](src/validation/validate_physics.py)
 
 Physics-informed F1 lap simulation: six first-order state equations and an algebraic
 slip-angle proxy, integrated along arc length (space-marched scheme).
+
+![Six-panel lap telemetry along arc length: speed, tyre temperature, effective friction, battery state of charge, MGU-K power and tyre wear](assets/outputs/lap_telemetry.png)
+
+*Default lap from `python run_all.py`. Tyre temperature and friction sit on their lower clips for the whole lap; see [Limitations](#limitations).*
 
 ## What this repository is
 
@@ -171,7 +175,7 @@ integrity-code-series-week3-f1-lap-simulation/
 ├── notebooks/
 │   └── explore_lap.ipynb         # Optional: interactive exploration
 ├── assets/
-│   └── outputs/                  # Generated at run time — all figures + GIF saved here
+│   └── outputs/                  # Generated at run time; only lap_telemetry.png is tracked (README figure)
 ├── run_all.py                    # Master execution script
 ├── pytest.ini                    # Test discovery config (collects the validation tests)
 ├── requirements.txt

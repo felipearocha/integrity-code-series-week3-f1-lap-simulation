@@ -237,7 +237,7 @@ f_T \;=\; \exp\!\left(-\frac{(T - T_{\text{opt}})^{2}}{2\,\sigma^{2}}\right),
 \qquad
 \mu_{\text{eff}} \;=\; \operatorname{clip}\bigl(\mu_0\,f_T\,(1 - 10^{4}\,k_w\,\text{wear}),\; 0.40,\; 2.20\bigr)
 $$
-grip peaks at $T=T_{\text{opt}}$ ($f_T=1$) and falls off over the thermal half-width $\sigma$. At the default parameters the tyre stays near 40 °C, so $\mu_{\text{eff}}$ sits at the 0.40 clip (see README, Limitations).
+grip peaks at $T=T_{\text{opt}}$ ($f_T=1$) and falls off over the thermal half-width $\sigma$. At the default parameters the tyre cools toward the 38 °C track temperature, so $\mu_{\text{eff}}$ sits at the 0.40 clip (see README, Limitations).
 <p class="src">[ASSUMED] Gaussian grip-temperature window with a linear wear-degradation factor; $T_{\text{opt}}$, $\sigma$, $\mu_0$, $k_w$ are model parameters.</p>
 <p>Code: <span class="code-ref">src/simulation/physics_model.py → grip_window, mu_effective</span>.</p>
 </div>
@@ -285,7 +285,7 @@ the six states ($m,\ v,\ \text{SOC},\ \text{fuel},\ T_{\text{tire}},\ \text{wear
 </div>
 
 <footer>
-  Integrity Code Series — Week 3 · Felipe Rocha · 13 / 13 physics-consistency tests passing<br>
+  Integrity Code Series — Week 3 · Felipe Rocha · 14 / 14 physics-consistency tests passing<br>
   Browse the generated panels in <code>assets/outputs/</code> for visual results.
 </footer>
 

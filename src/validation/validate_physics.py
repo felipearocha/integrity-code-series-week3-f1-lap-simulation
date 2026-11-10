@@ -32,9 +32,21 @@ def test_soc_bounds():
 def test_tyre_temp_bounds():
     cp = CarParams(); tp = TrackParams()
     res = run_lap(cp, tp)
-    assert res['T_tire'].min() >= 39.0, 'Tyre temp must not fall below 40C floor'
+    assert res['T_tire'].min() >= cp.T_track, 'Tyre temp must not fall below the track temperature'
     assert res['T_tire'].max() <= 151.0, 'Tyre temp must not exceed 150C ceiling'
     print('PASS: T_tire bounds respected [%.1fC, %.1fC]' % (res['T_tire'].min(), res['T_tire'].max()))
+
+def test_tyre_cools_to_track_temperature():
+    # With no heating, dT/dt = -k_cool (T - T_track) has the exact solution
+    # T(t) = T_track + (T0 - T_track) exp(-k_cool t): 38.09 C at the last node,
+    # below the old 40 C clip.
+    from dataclasses import replace
+    cp = replace(CarParams(), k_heat=0.0)
+    res = run_lap(cp, TrackParams())
+    t_end = res['t'][-1]
+    exact = cp.T_track + (cp.T_tire_init - cp.T_track) * np.exp(-cp.k_cool * t_end)
+    assert abs(res['T_tire'][-1] - exact) < 0.01,         'Tyre cooling must follow the ODE down to T_track, got %.3f C, exact %.3f C' % (res['T_tire'][-1], exact)
+    print('PASS: tyre cools to %.3f C (exact %.3f C)' % (res['T_tire'][-1], exact))
 
 def test_velocity_positive():
     cp = CarParams(); tp = TrackParams()
@@ -105,6 +117,7 @@ def run_all():
         test_traction_ceiling_positive,
         test_soc_bounds,
         test_tyre_temp_bounds,
+        test_tyre_cools_to_track_temperature,
         test_velocity_positive,
         test_wear_monotonic,
         test_lap_time_physical,

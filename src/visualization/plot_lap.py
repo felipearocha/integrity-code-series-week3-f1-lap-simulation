@@ -84,10 +84,11 @@ def hero_telemetry(res: dict, path: str):
                     label=f"T_opt ± σ ({cp.sigma_T:.0f}°C)")
     axes[1].axhline(cp.T_opt + cp.sigma_T, color=GRY, lw=0.6, ls=":", alpha=0.7)
     T = res["T_tire"]
-    # 40.0 is the lower bound of the np.clip on T in run_lap
-    if np.isclose(T.min(), 40.0):
-        axes[1].text(s[-1], 40.0 + 4, "flat at 40°C: lower clip on T "
-                     f"(cooling pulls toward T_track = {cp.T_track:.0f}°C)",
+    axes[1].axhline(cp.T_track, color=GRY, lw=0.6, ls="--", alpha=0.7,
+                    label=f"T_track {cp.T_track:.0f}°C")
+    if T.min() - cp.T_track < 1.0:
+        axes[1].text(s[-1], cp.T_track + 4, f"cools to {T.min():.1f}°C: heating is "
+                     "negligible, so T relaxes toward T_track",
                      ha="right", va="bottom", fontsize=10, color=YEL)
     axes[1].legend(fontsize=9, loc="upper right")
 
@@ -118,7 +119,7 @@ def hero_telemetry(res: dict, path: str):
 
 def thermal_grip_surface(cp: CarParams, path: str):
     """2D contour: mu_eff as function of tyre temp and wear."""
-    T_range    = np.linspace(40, 150, 200)
+    T_range    = np.linspace(cp.T_track, 150, 200)
     wear_range = np.linspace(0, 1, 200)
     TT, WW = np.meshgrid(T_range, wear_range)
     fT    = np.exp(-0.5 * ((TT - cp.T_opt) / cp.sigma_T) ** 2)

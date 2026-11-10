@@ -84,7 +84,7 @@ def hero_telemetry(res: dict, path: str):
                     label=f"T_opt ± σ ({cp.sigma_T:.0f}°C)")
     axes[1].axhline(cp.T_opt + cp.sigma_T, color=GRY, lw=0.6, ls=":", alpha=0.7)
     T = res["T_tire"]
-    # ponytail: 40.0 is the lower bound of the np.clip on T in run_lap
+    # 40.0 is the lower bound of the np.clip on T in run_lap
     if np.isclose(T.min(), 40.0):
         axes[1].text(s[-1], 40.0 + 4, "flat at 40°C: lower clip on T "
                      f"(cooling pulls toward T_track = {cp.T_track:.0f}°C)",

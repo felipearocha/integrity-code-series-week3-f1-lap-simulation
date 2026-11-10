@@ -5,14 +5,14 @@
 [![CI](https://github.com/felipearocha/integrity-code-series-week3-f1-lap-simulation/actions/workflows/ci.yml/badge.svg)](https://github.com/felipearocha/integrity-code-series-week3-f1-lap-simulation/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
-[![Tests: 13 passing](https://img.shields.io/badge/tests-13%20passing-brightgreen.svg)](src/validation/validate_physics.py)
+[![Tests: 14 passing](https://img.shields.io/badge/tests-14%20passing-brightgreen.svg)](src/validation/validate_physics.py)
 
 Physics-informed F1 lap simulation: six first-order state equations and an algebraic
 slip-angle proxy, integrated along arc length (space-marched scheme).
 
 ![Six-panel lap telemetry along arc length: speed, tyre temperature, effective friction, battery state of charge, MGU-K power and tyre wear](assets/outputs/lap_telemetry.png)
 
-*Default lap from `python run_all.py`. Tyre temperature and friction sit on their lower clips for the whole lap; see [Limitations](#limitations).*
+*Default lap from `python run_all.py`. The tyre cools toward the 38 C track temperature and friction sits on its 0.40 lower clip for the whole lap; see [Limitations](#limitations).*
 
 ## What this repository is
 
@@ -37,7 +37,7 @@ Default run (`python run_all.py`), measured on this repository:
 | Average speed | 228.7 km/h |
 | Top speed | 276.0 km/h |
 | SOC, start to end of lap | 85.0% to 36.3% |
-| Tyre temperature range | 40.0 to 55.0 C |
+| Tyre temperature range | 38.1 to 55.0 C |
 | Effective friction | 0.40 at every node (the lower clip) |
 | Wear at end of lap | 1.77% |
 | Fuel used | 1.72 kg |
@@ -169,7 +169,7 @@ integrity-code-series-week3-f1-lap-simulation/
 │   │   ├── plot_lap.py           # 5 static visualizations
 │   │   └── generate_gif.py       # Animated GIF of tyre thermal evolution
 │   └── validation/
-│       └── validate_physics.py   # 13 physics consistency tests
+│       └── validate_physics.py   # 14 physics consistency tests
 ├── docs/
 │   └── equations.html            # Rendered (MathJax) governing-equations reference
 ├── notebooks/
@@ -222,8 +222,9 @@ generation. Running run_all.py twice produces identical outputs.
 ## Limitations
 
 - **The grip window is inactive at the default parameters.** Heating is at most about 0.004 K/s
-  against cooling of 5.7 K/s at 95 C, so the tyre falls from 55 C to the 40 C floor and
-  $\mu_{\text{eff}}$ sits at its 0.40 lower clip at every node. Changing $\mu_0$ does not change
+  against cooling of 5.7 K/s at 95 C, so the tyre cools from 55 C toward the 38 C track
+  temperature (38.1 C at the end of the lap) and $\mu_{\text{eff}}$ sits at its 0.40 lower
+  clip at every node. Changing $\mu_0$ does not change
   the lap time, and `sensitivity_v_mu.png` is flat in $\mu_0$. There is no measured tyre data
   here to calibrate $k_{\text{heat}}$, so it stays `[ASSUMED]` and was not retuned.
 - **No lateral grip limit.** Cornering speed is not capped by available grip: peak lateral
@@ -242,7 +243,7 @@ surface is therefore limited to code and parameter integrity. Mitigations in sco
 
 - **Tampering** — deterministic run (fixed seed 42) makes any change to code or
   parameters reproducible and diff-visible; the physics-consistency suite
-  (`src/validation/validate_physics.py`, 13 tests) fails closed if governing-equation
+  (`src/validation/validate_physics.py`, 14 tests) fails closed if governing-equation
   behaviour drifts (grip peak, SOC/temperature bounds, wear monotonicity, lap-time range).
 - **Information disclosure** — no proprietary data and no ML; all inputs are the
   published `CarParams`/`TrackParams` defaults.

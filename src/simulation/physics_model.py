@@ -313,7 +313,9 @@ def run_lap(cp: CarParams, tp: TrackParams, verbose: bool = False) -> dict:
         # 11. tyre temperature ODE
         fT      = grip_window(T, cp)
         dT      = (cp.k_heat * E_slip - cp.k_cool * (T - cp.T_track)) * dt_i
-        T_new   = float(np.clip(T + dT, 40.0, 150.0))
+        # Explicit Euler keeps T >= T_track while k_cool*dt_i < 1 (dt_i <= 2.1 s here);
+        # the floor only guards that, it does not stop cooling above T_track.
+        T_new   = float(np.clip(T + dT, cp.T_track, 150.0))
 
         # 12. wear ODE
         penalty = 0.6 + 0.8 * (1.0 - fT)

@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ci: Dependabot no longer raises floors in requirements.txt; action updates are grouped
 
 ### Fixed
+- Tyre temperature floor is the track temperature (38 C), not a 40 C clip that stopped cooling: end-of-lap tyre temperature 40.0 -> 38.1 C, wear 1.766 -> 1.769 %, lap time unchanged at 51.94 s; the grip window stays inactive (mu_eff = 0.40 at every node)
 - Traction ceiling uses weight plus downforce, not four times downforce
 - Track closes: one net revolution and zero end gap (was 76.5 rad and 66.8 m)
 - Corner widths and amplitudes are independent draws
